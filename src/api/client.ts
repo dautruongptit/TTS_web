@@ -1,7 +1,7 @@
 // Client gọi tts-api qua đường dẫn tương đối /api/... (Vite proxy ở dev, nginx ở production).
 const BASE = '/api/v1'
 
-export interface Voice { id: string; name: string; priority: boolean }
+export interface Voice { id: string; name: string; priority: boolean; sampleReady: boolean }
 
 export interface AppConfig {
   maxTextLength: number

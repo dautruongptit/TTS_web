@@ -467,8 +467,10 @@ export default function App() {
                 <li key={v.id}>
                   <div role="button" tabIndex={0} onClick={() => setVoice(v.id)} onKeyDown={(e) => e.key === 'Enter' && setVoice(v.id)}
                     className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 cursor-pointer transition ${sel ? 'border-violet-400 bg-violet-500/15' : 'border-white/10 bg-white/[.03] hover:border-white/25'}`}>
-                    <button onClick={(e) => { e.stopPropagation(); toggleSample(v) }} aria-label={active ? `Dừng nghe thử ${v.name}` : `Nghe thử ${v.name}`}
-                      className={`w-8 h-8 rounded-full grid place-items-center shrink-0 transition ${active ? 'grad text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}>
+                    <button onClick={(e) => { e.stopPropagation(); toggleSample(v) }} disabled={!v.sampleReady}
+                      aria-label={active ? `Dừng nghe thử ${v.name}` : `Nghe thử ${v.name}`}
+                      title={v.sampleReady ? undefined : 'Chưa có giọng mẫu'}
+                      className={`w-8 h-8 rounded-full grid place-items-center shrink-0 transition disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'grad text-white' : 'bg-white/10 text-white enabled:hover:bg-white/20'}`}>
                       {active && sampleState === 'loading'
                         ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                         : active && sampleState === 'playing'
