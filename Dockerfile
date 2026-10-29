@@ -1,3 +1,4 @@
+# Stage 1: build static files
 FROM node:22-alpine AS build
 WORKDIR /app
 RUN corepack enable
@@ -6,7 +7,8 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build
 
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+# Stage 2: nginx phục vụ static và proxy /api sang backend
+FROM nginx:1.27-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 8020
+EXPOSE 80

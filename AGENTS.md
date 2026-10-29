@@ -8,7 +8,7 @@ Giao diện React cho dự án TTS (xem `../CLAUDE.md` ở thư mục gốc đ�
 
 ## Lệnh
 - `pnpm dev` – dev server cổng 8020, proxy `/api` sang `http://localhost:8010` (đổi bằng `API_PROXY_TARGET`).
-- `pnpm build` – build ra `dist/` (Dockerfile đưa vào nginx).
+- `pnpm build` – build ra `dist/` (Dockerfile đưa vào nginx, port 80 trong container, compose map 127.0.0.1:8020).
 - `pnpm typecheck` – `tsc --noEmit`.
 
 ## Cấu trúc `src/`
