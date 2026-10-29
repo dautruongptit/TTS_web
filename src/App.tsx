@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon, I } from './components/Icon'
-import { Avatar } from './components/Avatar'
 import { Wave } from './components/Wave'
 import { api, ApiError, type AppConfig, type AudioFile, type Voice } from './api/client'
 import { useTtsJob } from './hooks/useTtsJob'
 
-const palette: [string, string][] = [
-  ['#7c3aed', '#4f46e5'], ['#06b6d4', '#2563eb'], ['#0ea5e9', '#7c3aed'], ['#ec4899', '#7c3aed'],
-]
 const TTL_OPTIONS = [1, 6, 24, 72, 168]
 
 const fmtTime = (s: number) => {
@@ -39,6 +35,7 @@ export default function App() {
   const [upload, setUpload] = useState<File | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const voiceBoxRef = useRef<HTMLDivElement>(null)
 
   // Trình phát
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -70,7 +67,7 @@ export default function App() {
     Promise.all([api.config(), api.voices(), api.files()])
       .then(([c, v, f]) => {
         setConfig(c); setVoices(v); setFiles(f)
-        setVoice((cur) => cur || (v.find((x) => x.priority) ?? v[0])?.id || '')
+        setVoice((cur) => cur || v[0]?.id || '')
         setTtlHours((t) => Math.min(t, c.maxTtlHours))
       })
       .catch((e) => setLoadError(e instanceof ApiError ? e.message : 'Không tải được dữ liệu từ máy chủ.'))
@@ -82,12 +79,22 @@ export default function App() {
     return () => window.clearInterval(t)
   }, [refreshFiles])
 
-  const featured = useMemo(() => {
-    const pri = voices.filter((v) => v.priority)
-    return (pri.length ? pri : voices).slice(0, 4)
-  }, [voices])
-  const others = useMemo(() => voices.filter((v) => !featured.includes(v)), [voices, featured])
-  const filtered = others.filter((o) => o.name.toLowerCase().includes(q.toLowerCase()))
+  const filtered = useMemo(
+    () => voices.filter((o) => o.name.toLowerCase().includes(q.toLowerCase())),
+    [voices, q],
+  )
+
+  // Đóng danh sách giọng khi bấm ra ngoài hoặc nhấn Esc.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (voiceBoxRef.current && !voiceBoxRef.current.contains(e.target as Node)) { setOpen(false); setQ('') }
+    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); setQ('') } }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [open])
 
   function play(f: AudioFile) {
     const a = audioRef.current
@@ -258,37 +265,25 @@ export default function App() {
         {/* Controls */}
         <section className="glass rounded-2xl p-5 sm:p-6 col-span-12 lg:col-span-5 flex flex-col gap-6">
           <div>
-            <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-white">Giọng đọc</h2><span className="text-xs text-slate-400">Đã chọn: <b className="text-cyan-300">{voice || '—'}</b></span></div>
+            <h2 className="font-semibold text-white mb-3">Giọng đọc</h2>
             {!voices.length && !loadError && <p className="text-sm text-slate-500">Đang tải danh sách giọng...</p>}
-            <div className="grid grid-cols-2 gap-3">
-              {featured.map((v, i) => {
-                const sel = voice === v.id
-                const [from, to] = palette[i % palette.length]
-                return (
-                  <div key={v.id} role="button" tabIndex={0} onClick={() => setVoice(v.id)} onKeyDown={(e) => e.key === 'Enter' && setVoice(v.id)}
-                    className={`relative text-left rounded-2xl p-3 border transition cursor-pointer ${sel ? 'border-violet-400 bg-violet-500/15 shadow-[0_0_28px_rgba(124,58,237,.35)]' : 'border-white/10 bg-white/[.03] hover:border-white/25'}`}>
-                    {v.priority && <span className="absolute -top-2 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold text-white grad flex items-center gap-1"><Icon d={I.bolt} className="w-2.5 h-2.5" fill />Ưu tiên</span>}
-                    <div className="flex items-center gap-2.5 mt-1">
-                      <Avatar name={v.name} from={from} to={to} />
-                      <p className="text-sm font-semibold text-white truncate">{v.name}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            {others.length > 0 && (
-              <div className="relative mt-3">
-                <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2 px-3.5 py-3 rounded-xl bg-black/30 border border-white/10 text-sm text-slate-300 hover:border-white/25">
-                  <Icon d={I.search} className="w-4 h-4 text-slate-500" />
-                  <span className="flex-1 text-left">{others.some((o) => o.id === voice) ? voice : 'Tìm giọng đọc khác...'}</span>
-                  <span className="text-xs text-slate-500">+{others.length} giọng</span>
+            {voices.length > 0 && (
+              <div ref={voiceBoxRef} className="relative">
+                <button onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open}
+                  className={`w-full flex items-center gap-2 px-3.5 py-3 rounded-xl bg-black/30 border text-sm text-white transition ${open ? 'border-violet-400/60' : 'border-white/10 hover:border-white/25'}`}>
+                  <span className="w-7 h-7 rounded-full grad grid place-items-center text-xs font-bold shrink-0">{(voices.find((v) => v.id === voice)?.name ?? '?').trim().slice(0, 1)}</span>
+                  <span className="flex-1 text-left font-semibold truncate">{voices.find((v) => v.id === voice)?.name ?? 'Chọn giọng đọc'}</span>
+                  <span className="text-xs text-slate-500">{voices.length} giọng</span>
                   <Icon d={I.chev} className={`w-4 h-4 transition ${open ? 'rotate-180' : ''}`} />
                 </button>
                 {open && (
                   <div className="absolute z-20 mt-2 w-full rounded-xl border border-white/10 p-2 shadow-2xl" style={{ background: 'rgba(15,20,35,.97)' }}>
                     <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm kiếm..." className="w-full mb-1 px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-sm outline-none focus:border-violet-400" />
-                    <div className="max-h-44 overflow-auto">
-                      {filtered.map((o) => <button key={o.id} onClick={() => { setVoice(o.id); setOpen(false); setQ('') }} className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/10">{o.name}</button>)}
+                    <div role="listbox" className="max-h-60 overflow-auto">
+                      {filtered.map((o) => (
+                        <button key={o.id} role="option" aria-selected={o.id === voice} onClick={() => { setVoice(o.id); setOpen(false); setQ('') }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/10 ${o.id === voice ? 'bg-violet-500/20 text-white font-semibold' : ''}`}>{o.name}</button>
+                      ))}
                       {!filtered.length && <p className="px-3 py-2 text-sm text-slate-500">Không tìm thấy</p>}
                     </div>
                   </div>
