@@ -314,10 +314,10 @@ export default function App() {
             <p className="px-5 pb-4 text-sm text-slate-500">Chưa có file nào. Tạo voice đầu tiên của bạn ở trên.</p>
           ) : (
             <>
-            <div className={`hidden md:block overflow-auto lg:min-h-0 ${current ? "lg:pb-20" : ""}`}>
-              <table className="w-full min-w-[900px] text-sm">
+            <div className={`hidden md:block overflow-y-auto overflow-x-hidden lg:min-h-0 ${current ? "lg:pb-20" : ""}`}>
+              <table className="w-full text-sm">
                 <thead><tr className="text-left text-[11px] uppercase tracking-wider text-slate-500 border-y border-white/10">
-                  {['Tên file', 'Giọng đọc', 'Tốc độ / Định dạng', 'Thời gian lưu', ''].map((h, i) => <th key={i} className={`px-6 py-3 font-semibold ${i === 4 ? 'text-right' : ''}`}>{h}</th>)}
+                  {['Tên file', 'Giọng đọc', 'Tốc độ / Định dạng', '', 'Thời gian lưu'].map((h, i) => <th key={i} className={`px-3 py-2.5 font-semibold ${i === 3 ? 'text-right' : ''}`}>{h}</th>)}
                 </tr></thead>
                 <tbody>
                   {files.map((f) => {
@@ -325,15 +325,15 @@ export default function App() {
                     const isCur = current?.id === f.id
                     return (
                       <tr key={f.id} className="border-b border-white/5 hover:bg-white/[.03] transition">
-                        <td className="px-6 py-3.5"><div className="flex items-center gap-3"><div className={`w-9 h-9 rounded-xl grid place-items-center ${mp3 ? 'bg-violet-500/20 text-violet-300' : 'bg-cyan-500/20 text-cyan-300'}`}><Icon d={I.file} /></div><div className="min-w-0"><p className="font-medium text-white break-all">{f.fileName}</p><p className="text-xs text-slate-500">{fmtSize(f.fileSize)}</p></div></div></td>
-                        <td className="px-6 py-3.5 text-slate-300">{f.voice}</td>
-                        <td className="px-6 py-3.5"><span className="inline-flex gap-1.5"><span className="px-2 py-1 rounded-md bg-white/10 text-xs font-semibold">{f.speed.toFixed(1)}x</span><span className={`px-2 py-1 rounded-md text-xs font-bold ${mp3 ? 'bg-violet-500/20 text-violet-200' : 'bg-cyan-500/20 text-cyan-200'}`}>{f.format.toUpperCase()}</span></span></td>
-                        <td className="px-6 py-3.5"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${f.remainingSeconds > 6 * 3600 ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-amber-400/30 bg-amber-400/10 text-amber-300'}`}><Icon d={I.clock} className="w-3 h-3" />{remainText(f.remainingSeconds)} - Tự dọn rác</span></td>
-                        <td className="px-6 py-3.5"><div className="flex justify-end gap-2">
+                        <td className="px-3 py-3"><div className="flex items-center gap-3"><div className={`w-9 h-9 rounded-xl grid place-items-center ${mp3 ? 'bg-violet-500/20 text-violet-300' : 'bg-cyan-500/20 text-cyan-300'}`}><Icon d={I.file} /></div><div className="min-w-0"><p className="font-medium text-white break-all">{f.fileName}</p><p className="text-xs text-slate-500">{fmtSize(f.fileSize)}</p></div></div></td>
+                        <td className="px-3 py-3 text-slate-300">{f.voice}</td>
+                        <td className="px-3 py-3"><span className="inline-flex gap-1.5"><span className="px-2 py-1 rounded-md bg-white/10 text-xs font-semibold">{f.speed.toFixed(1)}x</span><span className={`px-2 py-1 rounded-md text-xs font-bold ${mp3 ? 'bg-violet-500/20 text-violet-200' : 'bg-cyan-500/20 text-cyan-200'}`}>{f.format.toUpperCase()}</span></span></td>
+                        <td className="px-3 py-3"><div className="flex justify-end gap-2">
                           <button onClick={() => play(f)} aria-label="Phát" className={`w-9 h-9 rounded-full grid place-items-center transition ${isCur && playing ? 'grad text-white' : 'bg-white/10 hover:bg-white/20'}`}>{isCur && playing ? <Icon d={I.pause} className="w-3.5 h-3.5" fill /> : <Icon d={I.play} className="w-3.5 h-3.5" fill />}</button>
                           <a href={f.downloadUrl} aria-label="Tải xuống" className="w-9 h-9 rounded-full grid place-items-center bg-white/10 hover:bg-white/20"><Icon d={I.down} /></a>
                           <button onClick={() => remove(f)} aria-label="Xóa" className="w-9 h-9 rounded-full grid place-items-center bg-white/10 hover:bg-rose-500/30"><Icon d={I.trash} className="w-4 h-4" /></button>
                         </div></td>
+                        <td className="px-3 py-3"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${f.remainingSeconds > 6 * 3600 ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-amber-400/30 bg-amber-400/10 text-amber-300'}`}><Icon d={I.clock} className="w-3 h-3" />{remainText(f.remainingSeconds)}</span></td>
                       </tr>
                     )
                   })}
