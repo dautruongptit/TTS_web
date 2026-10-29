@@ -287,7 +287,7 @@ export default function App() {
                 <span className="font-medium uppercase tracking-wider">Văn bản</span>
                 <button onClick={() => setText('')} className="flex items-center gap-1 hover:text-white"><Icon d={I.trash} className="w-3.5 h-3.5" />Xóa</button>
               </div>
-              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Nhập nội dung cần chuyển thành giọng nói..." rows={4}
+              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Mỗi buổi sáng là một cơ hội mới để bắt đầu lại. Đừng sợ bước chậm, chỉ sợ đứng yên. Hãy tin rằng những cố gắng nhỏ bé hôm nay sẽ trở thành thành quả lớn lao ngày mai. Cứ kiên trì đi tiếp, vì con đường nào cũng có điểm đến cho người không bỏ cuộc." rows={4}
                 className="w-full bg-transparent resize-none outline-none px-4 py-2 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500" />
               <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/10 text-xs text-slate-400">
                 <span><b className={overLimit ? 'text-rose-300' : 'text-white'}>{text.length.toLocaleString()}</b> ký tự · <b className="text-white">{words}</b> từ{eta !== null && <> · <span className="text-cyan-300">ước tính {fmtEta(eta)}</span></>}</span>
