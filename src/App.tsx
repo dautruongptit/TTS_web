@@ -25,7 +25,7 @@ export default function App() {
   const [text, setText] = useState('')
   const [voice, setVoice] = useState('')
   const [speed, setSpeed] = useState(1.0)
-  const [format, setFormat] = useState<'MP3' | 'WAV'>('MP3')
+  const [format, setFormat] = useState<'MP3' | 'WAV'>('WAV')
   const [ttlHours, setTtlHours] = useState(24)
   const [notif, setNotif] = useState(() => typeof Notification !== 'undefined' && Notification.permission === 'granted')
   const [toast, setToast] = useState<AudioFile | null>(null)
@@ -57,7 +57,6 @@ export default function App() {
     refreshFiles()
     if (!p.resultFile) return
     setToast(p.resultFile)
-    play(p.resultFile)
     if (notif && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       new Notification('Tạo voice hoàn tất', { body: `File ${p.resultFile.fileName} đã sẵn sàng.` })
     }
