@@ -168,7 +168,7 @@ export default function App() {
         <div className="toast fixed top-20 right-4 sm:right-6 z-50 w-[calc(100%-2rem)] sm:w-[360px] glass rounded-2xl p-4 flex gap-3 items-start" style={{ background: 'rgba(17,24,39,.85)' }}>
           <div className="w-10 h-10 rounded-xl grad grid place-items-center shrink-0"><Icon d={I.check} className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 text-[11px] text-slate-400 mb-0.5"><span>VieNeu Studio</span><span>•</span><span>vừa xong</span></div>
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 mb-0.5"><span>Voice Studio</span><span>•</span><span>vừa xong</span></div>
             <p className="text-sm font-semibold text-white">🎉 Tạo voice hoàn tất!</p>
             <p className="text-sm text-slate-300 truncate">File <span className="text-cyan-300 font-medium">{toast.fileName}</span> đã sẵn sàng.</p>
           </div>
@@ -183,7 +183,7 @@ export default function App() {
             <div className="w-9 h-9 rounded-xl grad grid place-items-center shadow-[0_0_24px_rgba(124,58,237,.6)]">
               <div className="flex items-end gap-[2px] h-4">{[.5, 1, .7, .9].map((h, i) => <span key={i} className="w-[3px] rounded-full bg-white" style={{ height: `${h * 100}%` }} />)}</div>
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">VieNeu <span className="grad-text">Studio</span></span>
+            <span className="text-lg font-bold tracking-tight text-white">Voice <span className="grad-text">Studio</span></span>
           </div>
           {typeof Notification !== 'undefined' && (
             <button onClick={toggleNotif} className={`flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-full border text-xs font-medium transition ${notif ? 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' : 'border-white/10 bg-white/5 text-slate-400'}`}>
@@ -197,8 +197,6 @@ export default function App() {
 
       <main className="max-w-[1320px] mx-auto px-4 sm:px-6 pt-8 grid grid-cols-12 gap-6">
         <div className="col-span-12">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">Biến chữ thành <span className="grad-text">giọng nói</span></h1>
-          <p className="text-slate-400 mt-2">Tạo voice tiếng Việt tự nhiên, chuẩn studio, trong vài giây.</p>
           {loadError && (
             <div role="alert" className="mt-4 flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
               <span className="flex-1">{loadError}</span>
