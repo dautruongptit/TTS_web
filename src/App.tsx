@@ -5,6 +5,7 @@ import { api, ApiError, type AppConfig, type AudioFile, type Voice } from './api
 import { useTtsJob } from './hooks/useTtsJob'
 
 const TTL_OPTIONS = [1, 6, 24, 72, 168]
+const DEFAULT_VOICE = 'Hải Đăng' // giọng chọn sẵn khi mở trang (không có thì dùng giọng đầu tiên)
 
 const fmtTime = (s: number) => {
   if (!isFinite(s)) return '00:00'
@@ -75,7 +76,7 @@ export default function App() {
     Promise.all([api.config(), api.voices(), api.files()])
       .then(([c, v, f]) => {
         setConfig(c); setVoices(v); setFiles(f)
-        setVoice((cur) => cur || v[0]?.id || '')
+        setVoice((cur) => cur || (v.find((x) => x.name === DEFAULT_VOICE) ?? v[0])?.id || '')
         setTtlHours((t) => Math.min(t, c.maxTtlHours))
       })
       .catch((e) => setLoadError(e instanceof ApiError ? e.message : 'Không tải được dữ liệu từ máy chủ.'))
