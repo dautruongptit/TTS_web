@@ -15,6 +15,11 @@ const fmtSize = (b: number) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` 
 const fmtTtl = (h: number) => (h >= 24 && h % 24 === 0 ? `${h / 24} ngày` : `${h} giờ`)
 const remainText = (sec: number) => (sec >= 3600 ? `Còn ${Math.ceil(sec / 3600)} giờ` : `Còn ${Math.max(1, Math.ceil(sec / 60))} phút`)
 
+// Đo thực tế trên engine CPU: khoảng 0,165 giây xử lý cho mỗi ký tự (381 ký tự ≈ 63 giây).
+const SECONDS_PER_CHAR = 0.165
+const estimateSeconds = (chars: number) => 5 + chars * SECONDS_PER_CHAR
+const fmtEta = (s: number) => (s < 60 ? `~${Math.max(5, Math.round(s / 5) * 5)} giây` : `~${Math.round(s / 60)} phút`)
+
 export default function App() {
   const [config, setConfig] = useState<AppConfig | null>(null)
   const [voices, setVoices] = useState<Voice[]>([])
@@ -138,6 +143,7 @@ export default function App() {
   const canSubmit = !busy && !!voice && hasInput && !overLimit
   const pct = ((speed - minSpeed) / (maxSpeed - minSpeed)) * 100
   const percent = job?.progressPercent ?? 0
+  const eta = tab === 'text' && text.trim() ? estimateSeconds(text.trim().length) : null
 
   function submit() {
     if (!canSubmit) return
@@ -243,7 +249,7 @@ export default function App() {
               <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Nhập nội dung cần chuyển thành giọng nói..." rows={5}
                 className="w-full flex-1 min-h-[110px] bg-transparent resize-none outline-none px-4 py-2 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500" />
               <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/10 text-xs text-slate-400">
-                <span><b className={overLimit ? 'text-rose-300' : 'text-white'}>{text.length.toLocaleString()}</b> ký tự · <b className="text-white">{words}</b> từ</span>
+                <span><b className={overLimit ? 'text-rose-300' : 'text-white'}>{text.length.toLocaleString()}</b> ký tự · <b className="text-white">{words}</b> từ{eta !== null && <> · <span className="text-cyan-300">ước tính {fmtEta(eta)}</span></>}</span>
                 <span className={overLimit ? 'text-rose-300' : ''}>Tối đa {maxLen.toLocaleString()} ký tự</span>
               </div>
             </div>
@@ -335,7 +341,7 @@ export default function App() {
                       ? `Đang chờ trong hàng đợi (vị trí ${job.queuePosition})...`
                       : job?.message || 'Đang gửi yêu cầu...'}
                   </span>
-                  <b className="text-cyan-300 tabular-nums">{percent}%</b>
+                  <b className="text-cyan-300 tabular-nums">{percent}%{eta !== null && <span className="font-normal text-slate-400"> · ước tính {fmtEta(eta)}</span>}</b>
                 </div>
                 <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
                   <div className="relative h-full rounded-full grad overflow-hidden shadow-[0_0_18px_rgba(6,182,212,.8)] transition-[width] duration-500" style={{ width: `${percent}%` }}>
