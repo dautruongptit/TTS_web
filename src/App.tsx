@@ -152,7 +152,7 @@ export default function App() {
   const ttlOptions = TTL_OPTIONS.filter((h) => h <= maxTtl)
 
   return (
-    <div className="min-h-screen pb-36 font-sans text-slate-200">
+    <div className={`flex flex-col min-h-dvh lg:h-dvh lg:overflow-hidden font-sans text-slate-200 ${current ? "pb-24 lg:pb-0" : ""}`}>
       <audio
         ref={audioRef}
         onPlay={() => setPlaying(true)}
@@ -178,7 +178,7 @@ export default function App() {
 
       {/* Nav */}
       <header className="sticky top-0 z-40 border-b border-white/10 backdrop-blur-xl bg-[#0B0F19]/70">
-        <div className="max-w-[1320px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        <div className="max-w-[1320px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl grad grid place-items-center shadow-[0_0_24px_rgba(124,58,237,.6)]">
               <div className="flex items-end gap-[2px] h-4">{[.5, 1, .7, .9].map((h, i) => <span key={i} className="w-[3px] rounded-full bg-white" style={{ height: `${h * 100}%` }} />)}</div>
@@ -195,21 +195,19 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-[1320px] mx-auto px-4 sm:px-6 pt-8 grid grid-cols-12 gap-6">
-        <div className="col-span-12">
-          {loadError && (
-            <div role="alert" className="mt-4 flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
+      <main className="flex-1 min-h-0 w-full max-w-[1320px] mx-auto px-4 sm:px-6 py-4 grid grid-cols-12 gap-4 lg:grid-rows-[auto_minmax(0,1fr)]">
+        {loadError && (
+            <div role="alert" className="col-span-12 flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
               <span className="flex-1">{loadError}</span>
               <button onClick={() => setLoadError(null)} aria-label="Đóng"><Icon d={I.x} className="w-4 h-4" /></button>
             </div>
-          )}
-        </div>
+        )}
 
         {/* Input */}
-        <section className="glass rounded-2xl p-5 sm:p-6 col-span-12 lg:col-span-7 flex flex-col gap-5">
+        <section className="glass rounded-2xl p-4 col-span-12 lg:col-span-7 flex flex-col gap-3">
           <div className="grid grid-cols-2 p-1 rounded-xl bg-black/30 border border-white/10">
             {([['file', 'Tải File (.json, .csv, .txt, .srt)', I.upload], ['text', 'Nhập Văn Bản', I.type]] as const).map(([k, label, ic]) => (
-              <button key={k} onClick={() => setTab(k)} className={`flex items-center justify-center gap-2 rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold transition ${tab === k ? 'grad text-white shadow-lg shadow-violet-900/40' : 'text-slate-400 hover:text-white'}`}>
+              <button key={k} onClick={() => setTab(k)} className={`flex items-center justify-center gap-2 rounded-lg py-2 px-2 text-xs sm:text-sm font-semibold transition ${tab === k ? 'grad text-white shadow-lg shadow-violet-900/40' : 'text-slate-400 hover:text-white'}`}>
                 <Icon d={ic} className="w-4 h-4 shrink-0" /><span className="truncate">{label}</span>
               </button>
             ))}
@@ -237,13 +235,13 @@ export default function App() {
           )}
 
           {tab === 'text' && (
-            <div className={`rounded-2xl bg-black/30 border transition focus-within:shadow-[0_0_0_4px_rgba(124,58,237,.15)] ${overLimit ? 'border-rose-400/60' : 'border-white/10 focus-within:border-violet-400/60'}`}>
+            <div className={`flex flex-col flex-1 min-h-0 rounded-xl bg-black/30 border transition focus-within:shadow-[0_0_0_4px_rgba(124,58,237,.15)] ${overLimit ? 'border-rose-400/60' : 'border-white/10 focus-within:border-violet-400/60'}`}>
               <div className="flex items-center justify-between px-4 pt-3 text-xs text-slate-400">
                 <span className="font-medium uppercase tracking-wider">Văn bản</span>
                 <button onClick={() => setText('')} className="flex items-center gap-1 hover:text-white"><Icon d={I.trash} className="w-3.5 h-3.5" />Xóa</button>
               </div>
-              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Nhập nội dung cần chuyển thành giọng nói..." rows={12}
-                className="w-full bg-transparent resize-none outline-none px-4 py-3 text-[15px] leading-relaxed text-slate-100 placeholder:text-slate-500" />
+              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Nhập nội dung cần chuyển thành giọng nói..." rows={5}
+                className="w-full flex-1 min-h-[110px] bg-transparent resize-none outline-none px-4 py-2 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500" />
               <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/10 text-xs text-slate-400">
                 <span><b className={overLimit ? 'text-rose-300' : 'text-white'}>{text.length.toLocaleString()}</b> ký tự · <b className="text-white">{words}</b> từ</span>
                 <span className={overLimit ? 'text-rose-300' : ''}>Tối đa {maxLen.toLocaleString()} ký tự</span>
@@ -252,7 +250,7 @@ export default function App() {
           )}
 
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-200">
+            <span className="inline-flex items-center gap-2 px-2.5 py-1 text-xs rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-200">
               <Icon d={I.file} className="w-4 h-4" /> Tên file tự đặt theo nội dung
             </span>
             <span className="text-xs text-slate-500">Tự động đánh số khi trùng tên</span>
@@ -260,14 +258,14 @@ export default function App() {
         </section>
 
         {/* Controls */}
-        <section className="glass rounded-2xl p-5 sm:p-6 col-span-12 lg:col-span-5 flex flex-col gap-6">
+        <section className="glass rounded-2xl p-4 col-span-12 lg:col-span-5 flex flex-col gap-4">
           <div>
             <h2 className="font-semibold text-white mb-3">Giọng đọc</h2>
             {!voices.length && !loadError && <p className="text-sm text-slate-500">Đang tải danh sách giọng...</p>}
             {voices.length > 0 && (
               <div ref={voiceBoxRef} className="relative">
                 <button onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open}
-                  className={`w-full flex items-center gap-2 px-3.5 py-3 rounded-xl bg-black/30 border text-sm text-white transition ${open ? 'border-violet-400/60' : 'border-white/10 hover:border-white/25'}`}>
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 border text-sm text-white transition ${open ? 'border-violet-400/60' : 'border-white/10 hover:border-white/25'}`}>
                   <span className="w-7 h-7 rounded-full grad grid place-items-center text-xs font-bold shrink-0">{(voices.find((v) => v.id === voice)?.name ?? '?').trim().slice(0, 1)}</span>
                   <span className="flex-1 text-left font-semibold truncate">{voices.find((v) => v.id === voice)?.name ?? 'Chọn giọng đọc'}</span>
                   <span className="text-xs text-slate-500">{voices.length} giọng</span>
@@ -290,12 +288,12 @@ export default function App() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-3"><h2 className="font-semibold text-white">Tốc độ đọc</h2><span className="px-2.5 py-1 rounded-lg bg-white/10 text-sm font-bold text-cyan-300 tabular-nums">{speed.toFixed(1)}x</span></div>
+            <div className="flex items-center justify-between mb-2"><h2 className="font-semibold text-white text-sm">Tốc độ đọc</h2><span className="px-2.5 py-1 rounded-lg bg-white/10 text-sm font-bold text-cyan-300 tabular-nums">{speed.toFixed(1)}x</span></div>
             <input type="range" min={minSpeed} max={maxSpeed} step={0.1} value={speed} onChange={(e) => setSpeed(Math.round(+e.target.value * 10) / 10)} aria-label="Tốc độ" className="range w-full"
               style={{ background: `linear-gradient(90deg,#7c3aed 0%,#06b6d4 ${pct}%,rgba(255,255,255,.12) ${pct}%)` }} />
             <div className="flex justify-between text-[11px] text-slate-500 mt-1.5"><span>{minSpeed.toFixed(1)}x</span><span>{maxSpeed.toFixed(1)}x</span></div>
             <div className="flex gap-2 mt-2">
-              {[0.8, 1.0, 1.2, 1.5].map((s) => <button key={s} onClick={() => setSpeed(s)} className={`flex-1 py-1.5 rounded-full text-xs font-semibold border transition ${speed === s ? 'grad border-transparent text-white' : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'}`}>{s.toFixed(1)}x</button>)}
+              {[0.8, 1.0, 1.2, 1.5].map((s) => <button key={s} onClick={() => setSpeed(s)} className={`flex-1 py-1 rounded-full text-xs font-semibold border transition ${speed === s ? 'grad border-transparent text-white' : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'}`}>{s.toFixed(1)}x</button>)}
             </div>
           </div>
 
@@ -303,12 +301,12 @@ export default function App() {
             <div className="col-span-2 sm:col-span-1">
               <h2 className="font-semibold text-white mb-3">Định dạng</h2>
               <div className="grid grid-cols-2 p-1 rounded-xl bg-black/30 border border-white/10">
-                {(['MP3', 'WAV'] as const).map((f) => <button key={f} onClick={() => setFormat(f)} className={`py-2 rounded-lg text-xs font-semibold transition ${format === f ? 'bg-white/15 text-white ring-1 ring-cyan-400/50' : 'text-slate-400'}`}>{f} <span className="block font-normal text-[10px] opacity-70">{f === 'MP3' ? '(Nhẹ)' : '(Gốc)'}</span></button>)}
+                {(['MP3', 'WAV'] as const).map((f) => <button key={f} onClick={() => setFormat(f)} className={`py-1.5 rounded-lg text-xs font-semibold transition ${format === f ? 'bg-white/15 text-white ring-1 ring-cyan-400/50' : 'text-slate-400'}`}>{f} <span className="block font-normal text-[10px] opacity-70">{f === 'MP3' ? '(Nhẹ)' : '(Gốc)'}</span></button>)}
               </div>
             </div>
             <div className="col-span-2 sm:col-span-1">
               <h2 className="font-semibold text-white mb-3">Lưu trữ file</h2>
-              <label className="flex items-center gap-2 px-3 py-[13px] rounded-xl bg-black/30 border border-white/10 text-xs text-slate-200">
+              <label className="flex items-center gap-2 px-3 py-[11px] rounded-xl bg-black/30 border border-white/10 text-xs text-slate-200">
                 <Icon d={I.clock} className="w-4 h-4 text-violet-300" />
                 <span className="shrink-0">Tự xóa sau</span>
                 <select value={ttlHours} onChange={(e) => setTtlHours(+e.target.value)} className="flex-1 min-w-0 bg-transparent outline-none font-semibold text-white">
@@ -320,7 +318,7 @@ export default function App() {
 
           <div className="flex flex-col gap-4">
             <button onClick={submit} disabled={!canSubmit}
-              className="relative overflow-hidden w-full py-4 rounded-2xl grad text-white font-bold text-base shadow-[0_10px_40px_-8px_rgba(124,58,237,.8)] enabled:hover:brightness-110 enabled:active:scale-[.99] transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="relative overflow-hidden w-full py-2.5 rounded-xl grad text-white font-semibold text-sm shadow-[0_10px_40px_-8px_rgba(124,58,237,.8)] enabled:hover:brightness-110 enabled:active:scale-[.99] transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
               <Icon d={I.bolt} className="w-5 h-5" fill /> {busy ? 'Đang xử lý...' : 'Tạo Voice Ngay'}
             </button>
             {error && (
@@ -350,15 +348,15 @@ export default function App() {
         </section>
 
         {/* History */}
-        <section className="glass rounded-2xl col-span-12 overflow-hidden">
-          <div className="flex items-center justify-between p-5 sm:p-6 pb-4">
+        <section className="glass rounded-2xl col-span-12 overflow-hidden flex flex-col lg:min-h-0">
+          <div className="flex items-center justify-between px-5 py-3 shrink-0">
             <div><h2 className="text-lg font-bold text-white">Lịch sử file đã tạo</h2><p className="text-sm text-slate-400">{files.length} file · tự động dọn khi hết hạn</p></div>
           </div>
           {files.length === 0 ? (
             <p className="px-6 pb-8 text-sm text-slate-500">Chưa có file nào. Tạo voice đầu tiên của bạn ở trên.</p>
           ) : (
             <>
-            <div className="hidden md:block overflow-x-auto">
+            <div className={`hidden md:block overflow-auto lg:flex-1 lg:min-h-0 ${current ? "lg:pb-20" : ""}`}>
               <table className="w-full min-w-[900px] text-sm">
                 <thead><tr className="text-left text-[11px] uppercase tracking-wider text-slate-500 border-y border-white/10">
                   {['Tên file', 'Giọng đọc', 'Tốc độ / Định dạng', 'Thời gian lưu', ''].map((h, i) => <th key={i} className={`px-6 py-3 font-semibold ${i === 4 ? 'text-right' : ''}`}>{h}</th>)}
