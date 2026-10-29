@@ -104,6 +104,12 @@ export default function App() {
     return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
   }, [open])
 
+  // Đổi giọng khi đang nghe thử giọng khác thì dừng mẫu cũ.
+  useEffect(() => {
+    if (sampleId && sampleId !== voice) stopSample()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice])
+
   function stopSample() {
     sampleRef.current?.pause()
     setSampleId(null)
@@ -165,6 +171,7 @@ export default function App() {
   const canSubmit = !busy && !!voice && hasInput && !overLimit
   const pct = ((speed - minSpeed) / (maxSpeed - minSpeed)) * 100
   const percent = job?.progressPercent ?? 0
+  const selVoice = voices.find((v) => v.id === voice)
   const eta = tab === 'text' && text.trim() ? estimateSeconds(text.trim().length) : null
 
   function submit() {
@@ -366,7 +373,7 @@ export default function App() {
         </section>
         </div>
 
-        {/* Cột phải: điều khiển + nghe thử giọng */}
+        {/* Cột phải: điều khiển */}
         <div className="contents lg:flex lg:flex-col lg:gap-4 lg:col-span-5 lg:row-start-2 lg:min-h-0">
         {/* Controls */}
         <section className="glass rounded-2xl p-4 col-span-12 order-2 lg:order-none shrink-0 flex flex-col gap-4">
@@ -374,7 +381,8 @@ export default function App() {
             <h2 className="font-semibold text-white mb-3">Giọng đọc</h2>
             {!voices.length && !loadError && <p className="text-sm text-slate-500">Đang tải danh sách giọng...</p>}
             {voices.length > 0 && (
-              <div ref={voiceBoxRef} className="relative">
+              <div className="flex items-center gap-2">
+              <div ref={voiceBoxRef} className="relative flex-1 min-w-0">
                 <button onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open}
                   className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 border text-sm text-white transition ${open ? 'border-violet-400/60' : 'border-white/10 hover:border-white/25'}`}>
                   <span className="w-7 h-7 rounded-full grad grid place-items-center text-xs font-bold shrink-0">{(voices.find((v) => v.id === voice)?.name ?? '?').trim().slice(0, 1)}</span>
@@ -395,6 +403,17 @@ export default function App() {
                   </div>
                 )}
               </div>
+              <button onClick={() => selVoice && toggleSample(selVoice)} disabled={!selVoice?.sampleReady}
+                aria-label={sampleId === voice ? 'Dừng nghe thử' : 'Nghe thử giọng đã chọn'}
+                title={selVoice && !selVoice.sampleReady ? 'Chưa có giọng mẫu' : 'Nghe thử giọng đã chọn (không tạo file)'}
+                className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 border transition disabled:opacity-30 disabled:cursor-not-allowed ${sampleId === voice ? 'grad border-transparent text-white' : 'bg-black/30 border-white/10 text-white enabled:hover:border-white/25 enabled:hover:bg-white/10'}`}>
+                {sampleId === voice && sampleState === 'loading'
+                  ? <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  : sampleId === voice && sampleState === 'playing'
+                    ? <Icon d={I.pause} className="w-3.5 h-3.5" fill />
+                    : <Icon d={I.play} className="w-3.5 h-3.5 ml-0.5" fill />}
+              </button>
+            </div>
             )}
           </div>
 
@@ -456,40 +475,6 @@ export default function App() {
               </div>
             )}
           </div>
-        </section>
-
-        {/* Nghe thử giọng đọc */}
-        <section className="glass rounded-2xl col-span-12 order-4 lg:order-none overflow-hidden flex flex-col lg:min-h-0 lg:flex-1">
-          <div className="px-5 py-3 shrink-0">
-            <h2 className="text-lg font-bold text-white">Nghe thử giọng đọc</h2>
-            <p className="text-sm text-slate-400">Bấm ▶ để nghe mẫu, bấm tên giọng để chọn.</p>
-          </div>
-          <ul className={`grid grid-cols-1 sm:grid-cols-2 gap-2 px-3 pb-3 overflow-y-auto max-h-72 lg:max-h-none lg:flex-1 lg:min-h-0 content-start ${current ? 'lg:pb-20' : ''}`}>
-            {voices.map((v) => {
-              const sel = v.id === voice
-              const active = sampleId === v.id
-              return (
-                <li key={v.id}>
-                  <div role="button" tabIndex={0} onClick={() => setVoice(v.id)} onKeyDown={(e) => e.key === 'Enter' && setVoice(v.id)}
-                    className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 cursor-pointer transition ${sel ? 'border-violet-400 bg-violet-500/15' : 'border-white/10 bg-white/[.03] hover:border-white/25'}`}>
-                    <button onClick={(e) => { e.stopPropagation(); toggleSample(v) }} disabled={!v.sampleReady}
-                      aria-label={active ? `Dừng nghe thử ${v.name}` : `Nghe thử ${v.name}`}
-                      title={v.sampleReady ? undefined : 'Chưa có giọng mẫu'}
-                      className={`w-8 h-8 rounded-full grid place-items-center shrink-0 transition disabled:opacity-30 disabled:cursor-not-allowed ${active ? 'grad text-white' : 'bg-white/10 text-white enabled:hover:bg-white/20'}`}>
-                      {active && sampleState === 'loading'
-                        ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                        : active && sampleState === 'playing'
-                          ? <Icon d={I.pause} className="w-3 h-3" fill />
-                          : <Icon d={I.play} className="w-3 h-3 ml-0.5" fill />}
-                    </button>
-                    <span className={`flex-1 min-w-0 truncate text-sm ${sel ? 'font-semibold text-white' : 'text-slate-200'}`}>{v.name}</span>
-                    {sel && <Icon d={I.check} className="w-4 h-4 text-cyan-300 shrink-0" />}
-                  </div>
-                </li>
-              )
-            })}
-            {!voices.length && <li className="px-2 py-2 text-sm text-slate-500">Đang tải danh sách giọng...</li>}
-          </ul>
         </section>
         </div>
       </main>
