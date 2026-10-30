@@ -428,9 +428,9 @@ export default function App() {
                   </div>
                 )}
               </div>
+              <div className="relative group shrink-0">
               <button onClick={() => selVoice && toggleSample(selVoice)} disabled={!selVoice?.sampleReady}
                 aria-label={sampleId === voice ? 'Dừng nghe thử' : 'Nghe thử giọng đã chọn'}
-                title={selVoice && !selVoice.sampleReady ? 'Chưa có giọng mẫu' : 'Nghe thử giọng đã chọn (không tạo file)'}
                 className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 border transition disabled:opacity-30 disabled:cursor-not-allowed ${sampleId === voice ? 'grad border-transparent text-white' : 'bg-black/30 border-white/10 text-white enabled:hover:border-white/25 enabled:hover:bg-white/10'}`}>
                 {sampleId === voice && sampleState === 'loading'
                   ? <span className="w-5 h-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
@@ -438,7 +438,11 @@ export default function App() {
                     ? <Icon d={I.pause} className="w-5 h-5" fill />
                     : <Icon d={I.play} className="w-5 h-5 ml-0.5" fill />}
               </button>
+              <span role="tooltip" className="pointer-events-none absolute right-0 bottom-full mb-2 z-30 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900/95 px-2.5 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {selVoice && !selVoice.sampleReady ? 'Chưa có giọng mẫu' : sampleId === voice ? 'Dừng nghe thử' : 'Nghe thử giọng'}
+              </span>
             </div>
+              </div>
             )}
           </div>
 
