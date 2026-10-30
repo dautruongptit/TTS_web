@@ -37,6 +37,8 @@ export default function App() {
   const [notif, setNotif] = useState(() => typeof Notification !== 'undefined' && Notification.permission === 'granted')
   const [toast, setToast] = useState<AudioFile | null>(null)
   const [textFile, setTextFile] = useState<AudioFile | null>(null) // file đang xem văn bản
+  const [notice, setNotice] = useState<string | null>(null)
+  const textRef = useRef<HTMLTextAreaElement>(null)
   const [drag, setDrag] = useState(false)
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
@@ -107,6 +109,12 @@ export default function App() {
     return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
   }, [open])
 
+  useEffect(() => {
+    if (!notice) return
+    const t = window.setTimeout(() => setNotice(null), 8000)
+    return () => window.clearTimeout(t)
+  }, [notice])
+
   // Đổi giọng khi đang nghe thử giọng khác thì dừng mẫu cũ.
   useEffect(() => {
     if (sampleId && sampleId !== voice) stopSample()
@@ -144,6 +152,19 @@ export default function App() {
   }
 
   const openText = (f: AudioFile) => setTextFile(f)
+
+  // Nhân bản: dán văn bản của file vào ô nhập để tạo bản ghi mới (đổi giọng/tốc độ rồi bấm Tạo).
+  async function duplicate(f: AudioFile) {
+    try {
+      const r = await api.fileText(f.id)
+      setTab('text')
+      setText(r.text)
+      setNotice(`Đã dán văn bản của "${f.fileName}". Chọn giọng khác rồi bấm Tạo Voice.`)
+      window.setTimeout(() => textRef.current?.focus(), 0)
+    } catch (e) {
+      setLoadError(e instanceof ApiError ? e.message : 'Không lấy được văn bản để nhân bản.')
+    }
+  }
 
   async function remove(f: AudioFile) {
     try {
@@ -294,12 +315,19 @@ export default function App() {
                 <span className="font-medium uppercase tracking-wider">Văn bản</span>
                 <button onClick={() => setText('')} className="flex items-center gap-1 hover:text-white"><Icon d={I.trash} className="w-3.5 h-3.5" />Xóa</button>
               </div>
-              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Mỗi ngày thức dậy là một cơ hội mới để bắt đầu lại. Đừng sợ bước chậm, chỉ sợ đứng yên. Hãy tin rằng những cố gắng nhỏ bé hôm nay sẽ trở thành thành quả lớn lao ngày mai. Cứ kiên trì đi tiếp, vì con đường nào cũng có điểm đến cho người không bỏ cuộc." rows={4}
+              <textarea ref={textRef} value={text} onChange={(e) => setText(e.target.value)} placeholder="Mỗi ngày thức dậy là một cơ hội mới để bắt đầu lại. Đừng sợ bước chậm, chỉ sợ đứng yên. Hãy tin rằng những cố gắng nhỏ bé hôm nay sẽ trở thành thành quả lớn lao ngày mai. Cứ kiên trì đi tiếp, vì con đường nào cũng có điểm đến cho người không bỏ cuộc." rows={4}
                 className="w-full bg-transparent resize-none outline-none px-4 py-2 text-sm leading-relaxed text-slate-100 placeholder:text-slate-500" />
               <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/10 text-xs text-slate-400">
                 <span><b className={overLimit ? 'text-rose-300' : 'text-white'}>{text.length.toLocaleString()}</b> ký tự · <b className="text-white">{words}</b> từ{eta !== null && <> · <span className="text-cyan-300">ước tính {fmtEta(eta)}</span></>}</span>
                 <span className={overLimit ? 'text-rose-300' : ''}>Tối đa {maxLen.toLocaleString()} ký tự</span>
               </div>
+            </div>
+          )}
+
+          {notice && (
+            <div role="status" className="flex items-start gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-xs text-cyan-100">
+              <span className="flex-1">{notice}</span>
+              <button onClick={() => setNotice(null)} aria-label="Đóng"><Icon d={I.x} className="w-3.5 h-3.5" /></button>
             </div>
           )}
 
@@ -323,7 +351,7 @@ export default function App() {
             <div className={`hidden md:block overflow-y-auto overflow-x-hidden lg:min-h-0 ${current ? "lg:pb-20" : ""}`}>
               <table className="w-full text-sm">
                 <thead><tr className="text-left text-[11px] uppercase tracking-wider text-slate-500 border-y border-white/10">
-                  {['Tên file', 'Giọng đọc', 'Tốc độ / Định dạng', '', 'Thời gian lưu'].map((h, i) => <th key={i} className={`px-3 py-2.5 font-semibold ${i === 3 ? 'text-right' : ''}`}>{h}</th>)}
+                  {['Tên file', 'Giọng đọc', 'Tốc độ', '', 'Thời gian lưu'].map((h, i) => <th key={i} className={`px-3 py-2.5 font-semibold ${i === 3 ? 'text-right' : ''}`}>{h}</th>)}
                 </tr></thead>
                 <tbody>
                   {files.map((f) => {
@@ -333,10 +361,11 @@ export default function App() {
                       <tr key={f.id} className="border-b border-white/5 hover:bg-white/[.03] transition">
                         <td className="px-3 py-3"><div className="flex items-center gap-3"><button onClick={() => openText(f)} aria-label="Xem văn bản" title="Xem văn bản" className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 transition hover:brightness-125 cursor-pointer ${mp3 ? 'bg-violet-500/20 text-violet-300' : 'bg-cyan-500/20 text-cyan-300'}`}><Icon d={I.file} /></button><div className="min-w-0"><p className="font-medium text-white break-all">{f.fileName}</p><p className="text-xs text-slate-500">{fmtSize(f.fileSize)}</p></div></div></td>
                         <td className="px-3 py-3 text-slate-300">{f.voice}</td>
-                        <td className="px-3 py-3"><span className="inline-flex gap-1.5"><span className="px-2 py-1 rounded-md bg-white/10 text-xs font-semibold">{f.speed.toFixed(1)}x</span><span className={`px-2 py-1 rounded-md text-xs font-bold ${mp3 ? 'bg-violet-500/20 text-violet-200' : 'bg-cyan-500/20 text-cyan-200'}`}>{f.format.toUpperCase()}</span></span></td>
+                        <td className="px-3 py-3"><span className="px-2 py-1 rounded-md bg-white/10 text-xs font-semibold">{f.speed.toFixed(1)}x</span></td>
                         <td className="px-3 py-3"><div className="flex justify-end gap-2">
                           <button onClick={() => play(f)} aria-label="Phát" className={`w-9 h-9 rounded-full grid place-items-center transition ${isCur && playing ? 'grad text-white' : 'bg-white/10 hover:bg-white/20'}`}>{isCur && playing ? <Icon d={I.pause} className="w-3.5 h-3.5" fill /> : <Icon d={I.play} className="w-3.5 h-3.5" fill />}</button>
                           <a href={f.downloadUrl} aria-label="Tải xuống" className="w-9 h-9 rounded-full grid place-items-center bg-white/10 hover:bg-white/20"><Icon d={I.down} /></a>
+                          <button onClick={() => duplicate(f)} aria-label="Nhân bản" title="Nhân bản: dán văn bản này vào ô nhập để tạo bản mới với giọng khác" className="w-9 h-9 rounded-full grid place-items-center bg-white/10 hover:bg-white/20"><Icon d={I.copy} className="w-4 h-4" /></button>
                           <button onClick={() => remove(f)} aria-label="Xóa" className="w-9 h-9 rounded-full grid place-items-center bg-white/10 hover:bg-rose-500/30"><Icon d={I.trash} className="w-4 h-4" /></button>
                         </div></td>
                         <td className="px-3 py-3"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${f.remainingSeconds > 6 * 3600 ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-amber-400/30 bg-amber-400/10 text-amber-300'}`}><Icon d={I.clock} className="w-3 h-3" />{remainText(f.remainingSeconds)}</span></td>
@@ -363,12 +392,12 @@ export default function App() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <span className="px-2 py-1 rounded-md bg-white/10 font-semibold">{f.speed.toFixed(1)}x</span>
-                      <span className={`px-2 py-1 rounded-md font-bold ${mp3 ? 'bg-violet-500/20 text-violet-200' : 'bg-cyan-500/20 text-cyan-200'}`}>{f.format.toUpperCase()}</span>
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border ${f.remainingSeconds > 6 * 3600 ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-amber-400/30 bg-amber-400/10 text-amber-300'}`}><Icon d={I.clock} className="w-3 h-3" />{remainText(f.remainingSeconds)}</span>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => play(f)} className={`flex-1 h-10 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition ${isCur && playing ? 'grad text-white' : 'bg-white/10'}`}>{isCur && playing ? <Icon d={I.pause} className="w-3.5 h-3.5" fill /> : <Icon d={I.play} className="w-3.5 h-3.5" fill />}{isCur && playing ? 'Tạm dừng' : 'Phát'}</button>
                       <a href={f.downloadUrl} aria-label="Tải xuống" className="w-10 h-10 rounded-xl grid place-items-center bg-white/10"><Icon d={I.down} /></a>
+                      <button onClick={() => duplicate(f)} aria-label="Nhân bản" title="Nhân bản: dán văn bản này vào ô nhập để tạo bản mới với giọng khác" className="w-10 h-10 rounded-xl grid place-items-center bg-white/10"><Icon d={I.copy} className="w-4 h-4" /></button>
                       <button onClick={() => remove(f)} aria-label="Xóa" className="w-10 h-10 rounded-xl grid place-items-center bg-white/10"><Icon d={I.trash} className="w-4 h-4" /></button>
                     </div>
                   </li>
