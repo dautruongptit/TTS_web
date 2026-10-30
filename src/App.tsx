@@ -3,6 +3,7 @@ import { Icon, I } from './components/Icon'
 import { Wave } from './components/Wave'
 import { api, ApiError, type AppConfig, type AudioFile, type Voice } from './api/client'
 import { useTtsJob } from './hooks/useTtsJob'
+import { TextModal } from './components/TextModal'
 
 const TTL_OPTIONS = [1, 6, 24, 72, 168]
 const DEFAULT_VOICE = 'Hải Đăng' // giọng chọn sẵn khi mở trang (không có thì dùng giọng đầu tiên)
@@ -35,6 +36,7 @@ export default function App() {
   const [ttlHours, setTtlHours] = useState(24)
   const [notif, setNotif] = useState(() => typeof Notification !== 'undefined' && Notification.permission === 'granted')
   const [toast, setToast] = useState<AudioFile | null>(null)
+  const [textFile, setTextFile] = useState<AudioFile | null>(null) // file đang xem văn bản
   const [drag, setDrag] = useState(false)
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
@@ -141,6 +143,8 @@ export default function App() {
     void a.play().catch(() => setPlaying(false))
   }
 
+  const openText = (f: AudioFile) => setTextFile(f)
+
   async function remove(f: AudioFile) {
     try {
       await api.deleteFile(f.id)
@@ -208,6 +212,8 @@ export default function App() {
           stopSample()
         }}
       />
+
+      {textFile && <TextModal file={textFile} onClose={() => setTextFile(null)} />}
 
       {/* Toast */}
       {toast && (
@@ -325,7 +331,7 @@ export default function App() {
                     const isCur = current?.id === f.id
                     return (
                       <tr key={f.id} className="border-b border-white/5 hover:bg-white/[.03] transition">
-                        <td className="px-3 py-3"><div className="flex items-center gap-3"><div className={`w-9 h-9 rounded-xl grid place-items-center ${mp3 ? 'bg-violet-500/20 text-violet-300' : 'bg-cyan-500/20 text-cyan-300'}`}><Icon d={I.file} /></div><div className="min-w-0"><p className="font-medium text-white break-all">{f.fileName}</p><p className="text-xs text-slate-500">{fmtSize(f.fileSize)}</p></div></div></td>
+                        <td className="px-3 py-3"><div className="flex items-center gap-3"><button onClick={() => openText(f)} aria-label="Xem văn bản" title="Xem văn bản" className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 transition hover:brightness-125 cursor-pointer ${mp3 ? 'bg-violet-500/20 text-violet-300' : 'bg-cyan-500/20 text-cyan-300'}`}><Icon d={I.file} /></button><div className="min-w-0"><p className="font-medium text-white break-all">{f.fileName}</p><p className="text-xs text-slate-500">{fmtSize(f.fileSize)}</p></div></div></td>
                         <td className="px-3 py-3 text-slate-300">{f.voice}</td>
                         <td className="px-3 py-3"><span className="inline-flex gap-1.5"><span className="px-2 py-1 rounded-md bg-white/10 text-xs font-semibold">{f.speed.toFixed(1)}x</span><span className={`px-2 py-1 rounded-md text-xs font-bold ${mp3 ? 'bg-violet-500/20 text-violet-200' : 'bg-cyan-500/20 text-cyan-200'}`}>{f.format.toUpperCase()}</span></span></td>
                         <td className="px-3 py-3"><div className="flex justify-end gap-2">
@@ -349,7 +355,7 @@ export default function App() {
                 return (
                   <li key={f.id} className="px-4 py-4 flex flex-col gap-3">
                     <div className="flex items-start gap-3">
-                      <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 ${mp3 ? 'bg-violet-500/20 text-violet-300' : 'bg-cyan-500/20 text-cyan-300'}`}><Icon d={I.file} /></div>
+                      <button onClick={() => openText(f)} aria-label="Xem văn bản" title="Xem văn bản" className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 transition hover:brightness-125 cursor-pointer ${mp3 ? 'bg-violet-500/20 text-violet-300' : 'bg-cyan-500/20 text-cyan-300'}`}><Icon d={I.file} /></button>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-white break-words">{f.fileName}</p>
                         <p className="text-xs text-slate-500">{f.voice} · {fmtSize(f.fileSize)}</p>

@@ -21,4 +21,5 @@ export const I = {
   lock: ['M5 11h14v10H5z', 'M8 11V7a4 4 0 0 1 8 0v4'],
   check: 'M20 6L9 17l-5-5',
   trash: ['M3 6h18', 'M8 6V4h8v2', 'M6 6l1 14h10l1-14'],
+  copy: ['M9 9h11v11H9z', 'M5 15H4V4h11v1'],
 }

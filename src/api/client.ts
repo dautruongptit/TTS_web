@@ -80,6 +80,7 @@ export const api = {
   files: () => request<AudioFile[]>('/tts/files'),
   progress: (jobId: string) => request<JobProgress>(`/tts/jobs/${jobId}/progress`),
   deleteFile: (id: string) => request<void>(`/tts/files/${id}`, { method: 'DELETE' }),
+  fileText: (id: string) => request<{ fileName: string; text: string }>(`/tts/files/${id}/text`),
   createJob: (input: CreateJobInput) => {
     const form = new FormData()
     if (input.file) form.append('file', input.file)
