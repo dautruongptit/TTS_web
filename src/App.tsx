@@ -115,6 +115,13 @@ export default function App() {
     return () => window.clearTimeout(t)
   }, [notice])
 
+  // Thông báo hoàn tất tự mất sau 3 giây (chỉ hiện trên màn hình từ 640px; điện thoại không hiện).
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(() => setToast(null), 3000)
+    return () => window.clearTimeout(t)
+  }, [toast])
+
   // Đổi giọng khi đang nghe thử giọng khác thì dừng mẫu cũ.
   useEffect(() => {
     if (sampleId && sampleId !== voice) stopSample()
@@ -238,7 +245,7 @@ export default function App() {
 
       {/* Toast */}
       {toast && (
-        <div className="toast fixed top-20 right-4 sm:right-6 z-50 w-[calc(100%-2rem)] sm:w-[360px] glass rounded-2xl p-4 flex gap-3 items-start" style={{ background: 'rgba(17,24,39,.85)' }}>
+        <div className="toast fixed top-20 right-4 sm:right-6 z-50 sm:w-[360px] glass rounded-2xl p-4 hidden sm:flex gap-3 items-start" style={{ background: 'rgba(17,24,39,.85)' }}>
           <div className="w-10 h-10 rounded-xl grad grid place-items-center shrink-0"><Icon d={I.check} className="w-5 h-5 text-white" /></div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-[11px] text-slate-400 mb-0.5"><span>Voice Studio</span><span>•</span><span>vừa xong</span></div>
