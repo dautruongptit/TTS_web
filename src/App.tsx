@@ -34,7 +34,6 @@ export default function App() {
   const [speed, setSpeed] = useState(1.0)
   const [format, setFormat] = useState<'MP3' | 'WAV'>('WAV')
   const [ttlHours, setTtlHours] = useState(24)
-  const [notif, setNotif] = useState(() => typeof Notification !== 'undefined' && Notification.permission === 'granted')
   const [toast, setToast] = useState<AudioFile | null>(null)
   const [textFile, setTextFile] = useState<AudioFile | null>(null) // file đang xem văn bản
   const [notice, setNotice] = useState<string | null>(null)
@@ -71,9 +70,6 @@ export default function App() {
     refreshFiles()
     if (!p.resultFile) return
     setToast(p.resultFile)
-    if (notif && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      new Notification('Tạo voice hoàn tất', { body: `File ${p.resultFile.fileName} đã sẵn sàng.` })
-    }
   })
 
   useEffect(() => {
@@ -191,13 +187,6 @@ export default function App() {
     setUpload(f)
   }
 
-  async function toggleNotif() {
-    if (typeof Notification === 'undefined') return
-    if (notif) { setNotif(false); return }
-    const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
-    setNotif(perm === 'granted')
-  }
-
   const words = text.trim() ? text.trim().split(/\s+/).length : 0
   const overLimit = text.length > maxLen
   const hasInput = tab === 'file' ? !!upload : text.trim().length > 0
@@ -265,13 +254,6 @@ export default function App() {
             </div>
             <span className="text-lg font-bold tracking-tight text-white">Voice <span className="grad-text">Studio</span></span>
           </div>
-          {typeof Notification !== 'undefined' && (
-            <button onClick={toggleNotif} className={`flex items-center gap-2 pl-3 pr-1.5 py-1.5 rounded-full border text-xs font-medium transition ${notif ? 'border-cyan-400/40 bg-cyan-400/10 text-cyan-200' : 'border-white/10 bg-white/5 text-slate-400'}`}>
-              <Icon d={I.bell} className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Thông báo trình duyệt: {notif ? 'Bật' : 'Tắt'}</span>
-              <span className={`w-9 h-5 rounded-full p-0.5 transition ${notif ? 'grad' : 'bg-white/15'}`}><span className={`block w-4 h-4 rounded-full bg-white transition-transform ${notif ? 'translate-x-4' : ''}`} /></span>
-            </button>
-          )}
         </div>
       </header>
 
