@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Icon, I } from './components/Icon'
 import { Wave } from './components/Wave'
 import { api, ApiError, type AppConfig, type AudioFile, type Voice } from './api/client'
@@ -93,17 +94,45 @@ export default function App() {
     [voices, q],
   )
 
-  // Đóng danh sách giọng khi bấm ra ngoài hoặc nhấn Esc.
+  // Điện thoại (< 640px) dùng bảng chọn giọng dạng bottom sheet.
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches)
+  useEffect(() => {
+    const m = window.matchMedia('(max-width: 639px)')
+    const on = () => setIsMobile(m.matches)
+    m.addEventListener('change', on)
+    return () => m.removeEventListener('change', on)
+  }, [])
+
+  // Đóng danh sách giọng khi bấm ra ngoài (máy tính) hoặc nhấn Esc; khóa cuộn nền khi bảng chọn mở trên điện thoại.
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => {
+      if (isMobile) return
       if (voiceBoxRef.current && !voiceBoxRef.current.contains(e.target as Node)) { setOpen(false); setQ('') }
     }
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); setQ('') } }
     document.addEventListener('mousedown', onDown)
     document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
-  }, [open])
+    const prev = document.body.style.overflow
+    if (isMobile) document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [open, isMobile])
+
+  const closeVoiceList = () => { setOpen(false); setQ('') }
+
+  const renderOptions = (big: boolean) => (
+    <div role="listbox" className={`${big ? 'max-h-[55dvh]' : 'max-h-60'} overflow-y-auto overscroll-contain`}>
+      {filtered.map((o) => (
+        <button key={o.id} role="option" aria-selected={o.id === voice} onClick={() => { setVoice(o.id); closeVoiceList() }}
+          className={`w-full text-left px-3 rounded-lg hover:bg-white/10 ${big ? 'py-3 text-base' : 'py-2 text-sm'} ${o.id === voice ? 'bg-violet-500/20 text-white font-semibold' : ''}`}>{o.name}</button>
+      ))}
+      {!filtered.length && <p className="px-3 py-2 text-sm text-slate-500">Không tìm thấy</p>}
+    </div>
+  )
 
   useEffect(() => {
     if (!notice) return
@@ -415,17 +444,26 @@ export default function App() {
                   <span className="text-xs text-slate-500">{voices.length} giọng</span>
                   <Icon d={I.chev} className={`w-4 h-4 transition ${open ? 'rotate-180' : ''}`} />
                 </button>
-                {open && (
-                  <div className="absolute z-20 mt-2 w-full rounded-xl border border-white/10 p-2 shadow-2xl" style={{ background: 'rgba(15,20,35,.97)' }}>
+                {open && !isMobile && (
+                  <div className="absolute z-20 mt-2 w-full rounded-xl border border-white/10 p-2 shadow-2xl bg-[#0f1423]">
                     <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm kiếm..." className="w-full mb-1 px-3 py-2 rounded-lg bg-black/40 border border-white/10 text-sm outline-none focus:border-violet-400" />
-                    <div role="listbox" className="max-h-60 overflow-auto">
-                      {filtered.map((o) => (
-                        <button key={o.id} role="option" aria-selected={o.id === voice} onClick={() => { setVoice(o.id); setOpen(false); setQ('') }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-white/10 ${o.id === voice ? 'bg-violet-500/20 text-white font-semibold' : ''}`}>{o.name}</button>
-                      ))}
-                      {!filtered.length && <p className="px-3 py-2 text-sm text-slate-500">Không tìm thấy</p>}
-                    </div>
+                    {renderOptions(false)}
                   </div>
+                )}
+                {/* Điện thoại: bảng chọn trượt từ đáy, vẽ ra ngoài thẻ (portal) để không bị đè hay cắt */}
+                {open && isMobile && createPortal(
+                  <div className="fixed inset-0 z-50">
+                    <div className="absolute inset-0 bg-black/60" onClick={closeVoiceList} />
+                    <div role="dialog" aria-label="Chọn giọng đọc" className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl border-t border-white/10 bg-[#0f1423] px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl">
+                      <div className="flex items-center justify-between pb-3">
+                        <h3 className="font-semibold text-white">Chọn giọng đọc</h3>
+                        <button onClick={closeVoiceList} aria-label="Đóng" className="p-1 text-slate-400"><Icon d={I.x} /></button>
+                      </div>
+                      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm kiếm..." className="w-full mb-2 px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-base outline-none focus:border-violet-400" />
+                      {renderOptions(true)}
+                    </div>
+                  </div>,
+                  document.body,
                 )}
               </div>
               <div className="relative group shrink-0">
